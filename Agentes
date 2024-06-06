@@ -1,121 +1,152 @@
-import openai
-import matplotlib.pyplot as plt  
-openai.api_key = Chave
+```bash
+pip install crewai crewai_tools requests
+```
 
-class Agente:
-    def __init__(self, nome, objetivo, habilidades, ferramentas):
-        self.nome = nome
-        self.objetivo = objetivo
-        self.habilidades = habilidades
-        self.ferramentas = ferramentas
+```python
+import os
+import requests
+from crewai import Agent, Task, Crew, Process
+from crewai_tools import SerperDevTool, BaseTool
 
-class Copywriter(Agente):
-    def __init__(self):
-        super().__init__(
-            nome="Clara Textos",
-            objetivo="Criar conteúdos legais e persuasivos para sites, blogs, redes sociais e e-mails.",
-            habilidades=["Escrita criativa", "SEO", "Pesquisa de mercado", "Adaptação de estilo"],
-            ferramentas=["Google Docs", "Grammarly", "SEMrush", "Ahrefs"]
-        )
+# API
+os.environ["SERPER_API_KEY"] =
+os.environ["OPENAI_API_KEY"] =
+os.environ["LANGUAGETOOL_API_KEY"] =
+os.environ["UNSPLASH_API_KEY"] =
+os.environ["COLORMIND_API_KEY"] =
 
-    def criar_conteudo(self, topico):
-        print(f"{self.nome} está escrevendo sobre: {topico}")
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "Você é um copywriter talentoso."},
-                {"role": "user", "content": f"Escreva um conteúdo interessante sobre {topico}."}
-            ]
-        )
-        conteudo = response['choices'][0]['message']['content']
-        with open("conteudo.txt", "w") as file:
-            file.write(conteudo)
-        print(f"Conteúdo salvo em 'conteudo.txt'.")
+search_tool = SerperDevTool()
 
-class Designer(Agente):
-    def __init__(self):
-        super().__init__(
-            nome="Diego Artes",
-            objetivo="Fazer designs legais para materiais digitais e impressos.",
-            habilidades=["Design gráfico", "Ferramentas de design", "UX/UI", "Conhecimento de cores e tipografia"],
-            ferramentas=["Adobe Creative Suite", "Figma", "Sketch", "Canva"]
-        )
+class LanguageTool(BaseTool):
+    name: str = "LanguageTool"
+    description: str = "Ferramenta de verificação gramatical e ortográfica."
 
-    def criar_grafico(self, dados):
-        print(f"{self.nome} está criando um gráfico.")
-        plt.plot(dados)
-        plt.title("Gráfico de Exemplo")
-        plt.xlabel("Eixo X")
-        plt.ylabel("Eixo Y")
-        plt.savefig("grafico.png")
-        plt.show()
-        print(f"Gráfico salvo como 'grafico.png'.")
+    def _run(self, text: str) -> str:
+        url = f"https://api.languagetool.org/v2/check"
+        params = {
+            'text': text,
+            'language': 'en-US',
+            'apiKey': os.environ["LANGUAGETOOL_API_KEY"]
+        }
+        response = requests.post(url, data=params)
+        return response.json()
 
-    def sugerir_design(self, projeto):
-        print(f"{self.nome} está sugerindo um design para: {projeto}")
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "Você é um designer gráfico talentoso."},
-                {"role": "user", "content": f"Descreva um design legal para {projeto}."}
-            ]
-        )
-        sugestao = response['choices'][0]['message']['content']
-        print(f"Sugestão de design: {sugestao}")
 
-class EspecialistaMarketing(Agente):
-    def __init__(self):
-        super().__init__(
-            nome="Mariana Campanhas",
-            objetivo="Planejar estratégias de marketing para aumentar a visibilidade da marca.",
-            habilidades=["Planejamento de marketing", "Gestão de campanhas", "Análise de dados", "Marketing de conteúdo"],
-            ferramentas=["Google Analytics", "Google Ads", "Facebook Ads Manager", "HubSpot"]
-        )
+class UnsplashTool(BaseTool):
+    name: str = "Unsplash"
+    description: str = "Ferramenta para obter imagens de alta qualidade."
 
-    def analisar_dados(self):
-        print(f"{self.nome} está analisando dados.")
-        dados = [10, 20, 30, 40, 50]
-        media = sum(dados) / len(dados)
-        print(f"A média dos dados é: {media}")
+    def _run(self, query: str) -> str:
+        url = f"https://api.unsplash.com/search/photos"
+        params = {
+            'query': query,
+            'client_id': os.environ["UNSPLASH_API_KEY"]
+        }
+        response = requests.get(url, params=params)
+        return response.json()
 
-    def planejar_campanha(self, campanha):
-        print(f"{self.nome} está planejando a campanha: {campanha}")
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "Você é um especialista em marketing."},
-                {"role": "user", "content": f"Planeje uma campanha de marketing para {campanha}."}
-            ]
-        )
-        plano = response['choices'][0]['message']['content']
-        print(f"Plano de campanha: {plano}")
+class ColormindTool(BaseTool):
+    name: str = "Colormind"
+    description: str = "Ferramenta para gerar paletas de cores."
 
-# Criando os agentes
-copywriter = Copywriter()
-designer = Designer()
-especialista_marketing = EspecialistaMarketing()
+    def _run(self, input_colors: str) -> str:
+        url = "http://colormind.io/api/"
+        data = {
+            "model": "default",
+            "input": input_colors.split(',')
+        }
+        response = requests.post(url, json=data)
+        return response.json()
 
-# Função para mostrar informações dos agentes
-def mostrar_agente(agente):
-    print(f"Nome: {agente.nome}")
-    print(f"Objetivo: {agente.objetivo}")
-    print("Habilidades:")
-    for habilidade in agente.habilidades:
-        print(f" - {habilidade}")
-    print("Ferramentas:")
-    for ferramenta in agente.ferramentas:
-        print(f" - {ferramenta}")
-    print("\n")
+# Criando um agente de copywriter
+copywriter = Agent(
+    role='Copywriter',
+    goal='Escrever textos publicitários atraentes e eficazes sobre pneus e serviços relacionados a pneus em carros',
+    verbose=True,
+    memory=True,
+    backstory=(
+        "Você é um redator experiente na São Gabriel Pneus, especializado em criar textos"
+        "que chamam a atenção e persuadem o público. Sua missão é"
+        "destacar os benefícios dos produtos e serviços e motivar os consumidores"
+        "a tomar ações."
+    ),
+    tools=[search_tool, LanguageTool()],
+    allow_delegation=True
+)
 
-# Mostrando informações dos agentes
-print("Informações dos Agentes da CrewIA:\n")
-mostrar_agente(copywriter)
-mostrar_agente(designer)
-mostrar_agente(especialista_marketing)
+# Criando um agente de marketing
+marketing_expert = Agent(
+    role='Marketing Expert',
+    goal='Planejar e executar estratégias de marketing para promover pneus e serviços relacionados a pneus em carros',
+    verbose=True,
+    memory=True,
+    backstory=(
+        "Você é um especialista em marketing na São Gabriel Pneus, com uma vasta experiência"
+        "em planejar e executar campanhas que aumentam a visibilidade e as vendas."
+        "Seu objetivo é criar estratégias que alcancem o público-alvo de forma eficaz."
+    ),
+    tools=[search_tool],
+    allow_delegation=True
+)
 
-# Executando funções dos agentes
-copywriter.criar_conteudo("melhores práticas de SEO 2024")
-designer.criar_grafico([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-designer.sugerir_design("novo logotipo da empresa")
-especialista_marketing.analisar_dados()
-especialista_marketing.planejar_campanha("lançamento de produto")
+# Criando um agente de design
+designer = Agent(
+    role='Designer',
+    goal='Criar elementos visuais atraentes para campanhas sobre pneus e serviços relacionados a pneus em carros',
+    verbose=True,
+    memory=True,
+    backstory=(
+        "Você é um designer talentoso na São Gabriel Pneus, com um olho para detalhes e estética."
+        "Seu trabalho é criar gráficos e elementos visuais que complementem"
+        "os textos publicitários e as estratégias de marketing, garantindo"
+        "uma apresentação coesa e atraente."
+    ),
+    tools=[UnsplashTool(), ColormindTool()],
+    allow_delegation=True
+)
+
+# Tarefa de criação de texto publicitário
+copywriting_task = Task(
+    description=(
+        "Escreva um texto publicitário cativante sobre pneus e serviços relacionados a pneus em carros."
+        "O texto deve destacar as principais vantagens dos produtos e serviços,"
+        "ser persuasivo e encorajar o leitor a realizar uma compra."
+    ),
+    expected_output='Um texto publicitário de 3 parágrafos sobre pneus e serviços relacionados a pneus em carros.',
+    tools=[search_tool, LanguageTool()],
+    agent=copywriter,
+)
+
+# Tarefa de planejamento de marketing
+marketing_task = Task(
+    description=(
+        "Crie uma estratégia de marketing abrangente para promover pneus e serviços relacionados a pneus em carros."
+        "A estratégia deve incluir análises de mercado, definição do público-alvo,"
+        "e sugestões de canais e métodos de promoção."
+    ),
+    expected_output='Um plano de marketing detalhado para pneus e serviços relacionados a pneus em carros.',
+    tools=[search_tool],
+    agent=marketing_expert,
+)
+
+# Tarefa de design
+design_task = Task(
+    description=(
+        "Desenvolva os elementos visuais necessários para a campanha de marketing de pneus e serviços relacionados a pneus em carros."
+        "Isso inclui banners, infográficos e imagens para redes sociais."
+    ),
+    expected_output='Um conjunto de elementos visuais atraentes para a campanha de pneus e serviços relacionados a pneus em carros.',
+    tools=[UnsplashTool(), ColormindTool()],
+    agent=designer,
+)
+
+# Configurando a tripulação
+crew = Crew(
+    agents=[copywriter, marketing_expert, designer],
+    tasks=[copywriting_task, marketing_task, design_task],
+    process=Process.sequential
+)
+
+# Executando a tripulação
+result = crew.kickoff(inputs={'product': 'pneus e serviços relacionados a pneus em carros'})
+print(result)
