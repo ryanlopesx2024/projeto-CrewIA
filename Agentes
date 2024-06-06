@@ -1,0 +1,100 @@
+# Importando bibliotecas necessárias
+from dataclasses import dataclass
+from typing import List
+import matplotlib.pyplot as plt  # Biblioteca para criação de gráficos
+
+@dataclass
+class Agente:
+    nome: str
+    objetivo: str
+    habilidades: List[str]
+    ferramentas: List[str]
+
+@dataclass
+class Copywriter(Agente):
+    def __init__(self):
+        self.nome = "Clara Textos"
+        self.objetivo = "Criar conteúdos envolventes e persuasivos para diversas plataformas, como sites, blogs, redes sociais e e-mails."
+        self.habilidades = [
+            "Escrita criativa e técnica",
+            "SEO (Otimização para Motores de Busca)",
+            "Pesquisa de mercado e público-alvo",
+            "Adaptação de tom e estilo de escrita conforme a marca"
+        ]
+        self.ferramentas = ["Google Docs", "Grammarly", "SEMrush", "Ahrefs"]
+
+    def criar_conteudo(self, topico: str):
+        print(f"{self.nome} está criando conteúdo sobre: {topico}")
+        conteudo = f"Este é um conteúdo envolvente sobre {topico}."
+        with open("conteudo.txt", "w") as file:
+            file.write(conteudo)
+        print(f"Conteúdo salvo no arquivo 'conteudo.txt'.")
+
+@dataclass
+class Designer(Agente):
+    def __init__(self):
+        self.nome = "Diego Artes"
+        self.objetivo = "Desenvolver designs visuais atraentes e funcionais para materiais digitais e impressos, incluindo logotipos, banners, posts em redes sociais e layouts de sites."
+        self.habilidades = [
+            "Design gráfico e digital",
+            "Ferramentas de design (Adobe Photoshop, Illustrator, InDesign)",
+            "UX/UI (Experiência do Usuário/Interface do Usuário)",
+            "Conhecimento de cores, tipografia e branding"
+        ]
+        self.ferramentas = ["Adobe Creative Suite", "Figma", "Sketch", "Canva"]
+
+    def criar_grafico(self, dados: List[int]):
+        print(f"{self.nome} está criando um gráfico.")
+        plt.plot(dados)
+        plt.title("Gráfico de Exemplo")
+        plt.xlabel("Eixo X")
+        plt.ylabel("Eixo Y")
+        plt.savefig("grafico.png")
+        plt.show()
+        print(f"Gráfico salvo como 'grafico.png'.")
+
+@dataclass
+class EspecialistaMarketing(Agente):
+    def __init__(self):
+        self.nome = "Mariana Campanhas"
+        self.objetivo = "Planejar e executar estratégias de marketing para aumentar a visibilidade da marca, engajamento do público e conversões."
+        self.habilidades = [
+            "Planejamento estratégico de marketing",
+            "Gestão de campanhas publicitárias (Google Ads, Facebook Ads)",
+            "Análise de dados e métricas (Google Analytics)",
+            "Marketing de conteúdo e inbound marketing"
+        ]
+        self.ferramentas = ["Google Analytics", "Google Ads", "Facebook Ads Manager", "HubSpot"]
+
+    def analisar_dados(self):
+        print(f"{self.nome} está analisando dados de exemplo.")
+        dados = [10, 20, 30, 40, 50]  # Dados de exemplo
+        media = sum(dados) / len(dados)
+        print(f"A média dos dados é: {media}")
+
+# Criando instâncias dos agentes
+copywriter = Copywriter()
+designer = Designer()
+especialista_marketing = EspecialistaMarketing()
+
+# Exibindo informações dos agentes
+def exibir_agente(agente: Agente):
+    print(f"Nome: {agente.nome}")
+    print(f"Objetivo: {agente.objetivo}")
+    print("Habilidades:")
+    for habilidade in agente.habilidades:
+        print(f" - {habilidade}")
+    print("Ferramentas:")
+    for ferramenta in agente.ferramentas:
+        print(f" - {ferramenta}")
+    print("\n")
+
+print("Informações dos Agentes da CrewIA:\n")
+exibir_agente(copywriter)
+exibir_agente(designer)
+exibir_agente(especialista_marketing)
+
+# Executando funções específicas dos agentes
+copywriter.criar_conteudo("melhores práticas de SEO 2024")
+designer.criar_grafico([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+especialista_marketing.analisar_dados()
