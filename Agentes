@@ -1,19 +1,18 @@
-```bash
-pip install crewai crewai_tools requests
-```
-
-```python
 import os
 import requests
 from crewai import Agent, Task, Crew, Process
 from crewai_tools import SerperDevTool, BaseTool
+import openai
 
-# API
-os.environ["SERPER_API_KEY"] =
-os.environ["OPENAI_API_KEY"] =
-os.environ["LANGUAGETOOL_API_KEY"] =
+# API’s
+os.environ["SERPER_API_KEY"] = 
+os.environ["OPENAI_API_KEY"] = 
+os.environ["LANGUAGETOOL_API_KEY"] = 
 os.environ["UNSPLASH_API_KEY"] =
 os.environ["COLORMIND_API_KEY"] =
+
+# OpenAI
+openai.api_key = os.environ["OPENAI_API_KEY"]
 
 search_tool = SerperDevTool()
 
@@ -30,7 +29,6 @@ class LanguageTool(BaseTool):
         }
         response = requests.post(url, data=params)
         return response.json()
-
 
 class UnsplashTool(BaseTool):
     name: str = "Unsplash"
@@ -58,7 +56,19 @@ class ColormindTool(BaseTool):
         response = requests.post(url, json=data)
         return response.json()
 
-# Criando um agente de copywriter
+class OpenAITool(BaseTool):
+    name: str = "OpenAI"
+    description: str = "Ferramenta para geração de texto usando OpenAI GPT-3."
+
+    def _run(self, prompt: str) -> str:
+        response = openai.Completion.create(
+            engine="davinci",
+            prompt=prompt,
+            max_tokens=150
+        )
+        return response.choices[0].text.strip()
+
+# Agente de copywriter
 copywriter = Agent(
     role='Copywriter',
     goal='Escrever textos publicitários atraentes e eficazes sobre pneus e serviços relacionados a pneus em carros',
@@ -70,11 +80,11 @@ copywriter = Agent(
         "destacar os benefícios dos produtos e serviços e motivar os consumidores"
         "a tomar ações."
     ),
-    tools=[search_tool, LanguageTool()],
+    tools=[search_tool, LanguageTool(), OpenAITool()],
     allow_delegation=True
 )
 
-# Criando um agente de marketing
+# Agente de marketing
 marketing_expert = Agent(
     role='Marketing Expert',
     goal='Planejar e executar estratégias de marketing para promover pneus e serviços relacionados a pneus em carros',
@@ -85,11 +95,11 @@ marketing_expert = Agent(
         "em planejar e executar campanhas que aumentam a visibilidade e as vendas."
         "Seu objetivo é criar estratégias que alcancem o público-alvo de forma eficaz."
     ),
-    tools=[search_tool],
+    tools=[search_tool, OpenAITool()],
     allow_delegation=True
 )
 
-# Criando um agente de design
+# Agente de design
 designer = Agent(
     role='Designer',
     goal='Criar elementos visuais atraentes para campanhas sobre pneus e serviços relacionados a pneus em carros',
@@ -101,7 +111,7 @@ designer = Agent(
         "os textos publicitários e as estratégias de marketing, garantindo"
         "uma apresentação coesa e atraente."
     ),
-    tools=[UnsplashTool(), ColormindTool()],
+    tools=[UnsplashTool(), ColormindTool(), OpenAITool()],
     allow_delegation=True
 )
 
@@ -113,7 +123,7 @@ copywriting_task = Task(
         "ser persuasivo e encorajar o leitor a realizar uma compra."
     ),
     expected_output='Um texto publicitário de 3 parágrafos sobre pneus e serviços relacionados a pneus em carros.',
-    tools=[search_tool, LanguageTool()],
+    tools=[search_tool, LanguageTool(), OpenAITool()],
     agent=copywriter,
 )
 
@@ -125,28 +135,9 @@ marketing_task = Task(
         "e sugestões de canais e métodos de promoção."
     ),
     expected_output='Um plano de marketing detalhado para pneus e serviços relacionados a pneus em carros.',
-    tools=[search_tool],
+    tools=[search_tool, OpenAITool()],
     agent=marketing_expert,
 )
 
 # Tarefa de design
-design_task = Task(
-    description=(
-        "Desenvolva os elementos visuais necessários para a campanha de marketing de pneus e serviços relacionados a pneus em carros."
-        "Isso inclui banners, infográficos e imagens para redes sociais."
-    ),
-    expected_output='Um conjunto de elementos visuais atraentes para a campanha de pneus e serviços relacionados a pneus em carros.',
-    tools=[UnsplashTool(), ColormindTool()],
-    agent=designer,
-)
-
-# Configurando a tripulação
-crew = Crew(
-    agents=[copywriter, marketing_expert, designer],
-    tasks=[copywriting_task, marketing_task, design_task],
-    process=Process.sequential
-)
-
-# Executando a tripulação
-result = crew.kickoff(inputs={'product': 'pneus e serviços relacionados a pneus em carros'})
-print(result)
+design_task = Task
